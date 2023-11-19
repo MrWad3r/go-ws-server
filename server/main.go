@@ -16,7 +16,7 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: 1024,
 }
 
-var connections = make(map[string]bool)
+var connections = make(map[string]struct{})
 var generatedNumbers = sync.Map{}
 
 func main() {
@@ -34,14 +34,14 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 
 	ipAddress := getIpAddress(r)
 
-	if ok := connections[ipAddress]; ok {
+	if _, ok := connections[ipAddress]; ok {
 		fmt.Println("Connection already established")
 		rejectWsConnection(ws)
 		return
 
 	}
 
-	connections[ipAddress] = true
+	connections[ipAddress] = struct{}{}
 
 	if err != nil {
 		fmt.Println(err)
@@ -97,7 +97,7 @@ func getRandomBigInt() *big.Int {
 		_, ok := generatedNumbers.Load(n.String())
 
 		if !ok {
-			generatedNumbers.Store(n.String(), true)
+			generatedNumbers.Store(n.String(), struct{}{})
 		} else {
 			fmt.Println("Already have", n)
 		}
